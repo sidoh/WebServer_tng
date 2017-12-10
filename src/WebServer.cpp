@@ -40,9 +40,9 @@ const char * AUTHORIZATION_HEADER = "Authorization";
 
 WebServer::WebServer(IPAddress addr, int port)
 : _server(addr, port)
-, _currentMethod(HTTP_ANY)
+, _currentMethod(HTTPMethod::HTTP_ANY)
 , _currentVersion(0)
-, _currentStatus(HC_NONE)
+, _currentStatus(HTTPClientStatus::HC_NONE)
 , _statusChange(0)
 , _currentHandler(0)
 , _firstHandler(0)
@@ -58,9 +58,9 @@ WebServer::WebServer(IPAddress addr, int port)
 
 WebServer::WebServer(int port)
 : _server(port)
-, _currentMethod(HTTP_ANY)
+, _currentMethod(HTTPMethod::HTTP_ANY)
 , _currentVersion(0)
-, _currentStatus(HC_NONE)
+, _currentStatus(HTTPClientStatus::HC_NONE)
 , _statusChange(0)
 , _currentHandler(0)
 , _firstHandler(0)
@@ -88,7 +88,7 @@ WebServer::~WebServer() {
 }
 
 void WebServer::begin() {
-  _currentStatus = HC_NONE;
+  _currentStatus = HTTPClientStatus::HC_NONE;
   _server.begin();
   if(!_headerKeysCount)
     collectHeaders(0, 0);
@@ -133,7 +133,7 @@ void WebServer::requestAuthentication(){
 }
 
 void WebServer::on(const String &uri, WebServer::THandlerFunction handler) {
-  on(uri, HTTP_ANY, handler);
+  on(uri, HTTPMethod::HTTP_ANY, handler);
 }
 
 void WebServer::on(const String &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
@@ -164,7 +164,7 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 }
 
 void WebServer::handleClient() {
-  if (_currentStatus == HC_NONE) {
+  if (_currentStatus == HTTPClientStatus::HC_NONE) {
     WiFiClient client = _server.available();
     if (!client) {
       return;
@@ -175,22 +175,22 @@ void WebServer::handleClient() {
 #endif
 
     _currentClient = client;
-    _currentStatus = HC_WAIT_READ;
+    _currentStatus = HTTPClientStatus::HC_WAIT_READ;
     _statusChange = millis();
   }
 
   if (!_currentClient.connected()) {
     _currentClient = WiFiClient();
-    _currentStatus = HC_NONE;
+    _currentStatus = HTTPClientStatus::HC_NONE;
     return;
   }
 
   // Wait for data from client to become available
-  if (_currentStatus == HC_WAIT_READ) {
+  if (_currentStatus == HTTPClientStatus::HC_WAIT_READ) {
     if (!_currentClient.available()) {
       if (millis() - _statusChange > HTTP_MAX_DATA_WAIT) {
         _currentClient = WiFiClient();
-        _currentStatus = HC_NONE;
+        _currentStatus = HTTPClientStatus::HC_NONE;
       }
       yield();
       return;
@@ -198,7 +198,7 @@ void WebServer::handleClient() {
 
     if (!_parseRequest(_currentClient)) {
       _currentClient = WiFiClient();
-      _currentStatus = HC_NONE;
+      _currentStatus = HTTPClientStatus::HC_NONE;
       return;
     }
     _currentClient.setTimeout(HTTP_MAX_SEND_WAIT);
@@ -207,19 +207,19 @@ void WebServer::handleClient() {
 
     if (!_currentClient.connected()) {
       _currentClient = WiFiClient();
-      _currentStatus = HC_NONE;
+      _currentStatus = HTTPClientStatus::HC_NONE;
       return;
     } else {
-      _currentStatus = HC_WAIT_CLOSE;
+      _currentStatus = HTTPClientStatus::HC_WAIT_CLOSE;
       _statusChange = millis();
       return;
     }
   }
 
-  if (_currentStatus == HC_WAIT_CLOSE) {
+  if (_currentStatus == HTTPClientStatus::HC_WAIT_CLOSE) {
     if (millis() - _statusChange > HTTP_MAX_CLOSE_WAIT) {
       _currentClient = WiFiClient();
-      _currentStatus = HC_NONE;
+      _currentStatus = HTTPClientStatus::HC_NONE;
     } else {
       yield();
       return;

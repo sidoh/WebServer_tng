@@ -105,17 +105,17 @@ bool handleFileRead(String path){
 void handleFileUpload(){
   if(server.uri() != "/edit") return;
   HTTPUpload& upload = server.upload();
-  if(upload.status == UPLOAD_FILE_START){
+  if(upload.status == HTTPUploadStatus::UPLOAD_FILE_START){
     String filename = upload.filename;
     if(!filename.startsWith("/")) filename = "/"+filename;
     DBG_OUTPUT_PORT.print("handleFileUpload Name: "); DBG_OUTPUT_PORT.println(filename);
     fsUploadFile = SPIFFS.open(filename, "w");
     filename = String();
-  } else if(upload.status == UPLOAD_FILE_WRITE){
+  } else if(upload.status == HTTPUploadStatus::UPLOAD_FILE_WRITE){
     //DBG_OUTPUT_PORT.print("handleFileUpload Data: "); DBG_OUTPUT_PORT.println(upload.currentSize);
     if(fsUploadFile)
       fsUploadFile.write(upload.buf, upload.currentSize);
-  } else if(upload.status == UPLOAD_FILE_END){
+  } else if(upload.status == HTTPUploadStatus::UPLOAD_FILE_END){
     if(fsUploadFile)
       fsUploadFile.close();
     DBG_OUTPUT_PORT.print("handleFileUpload Size: "); DBG_OUTPUT_PORT.println(upload.totalSize);
@@ -303,18 +303,18 @@ void setup(void){
   
   //SERVER INIT
   //list directory
-  server.on("/list", HTTP_GET, handleFileList);
+  server.on("/list", HTTPMethod::HTTP_GET, handleFileList);
   //load editor
-  server.on("/edit", HTTP_GET, [](){
+  server.on("/edit", HTTPMethod::HTTP_GET, [](){
     if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "FileNotFound");
   });
   //create file
-  server.on("/edit", HTTP_PUT, handleFileCreate);
+  server.on("/edit", HTTPMethod::HTTP_PUT, handleFileCreate);
   //delete file
-  server.on("/edit", HTTP_DELETE, handleFileDelete);
+  server.on("/edit", HTTPMethod::HTTP_DELETE, handleFileDelete);
   //first callback is called after the request has ended with all parsed arguments
   //second callback handles file uploads at that location
-  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
+  server.on("/edit", HTTPMethod::HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
 
   //called when the url is not defined here
   //use it to load content from SPIFFS
@@ -324,7 +324,7 @@ void setup(void){
   });
 
   //get heap status, analog input value and all GPIO statuses in one json call
-  server.on("/all", HTTP_GET, [](){
+  server.on("/all", HTTPMethod::HTTP_GET, [](){
     String json = "{";
     json += "\"heap\":"+String(ESP.getFreeHeap());
     json += ", \"analog\":"+String(analogRead(A0));

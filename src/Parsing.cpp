@@ -97,17 +97,17 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   _currentUri = url;
   _chunked = false;
 
-  HTTPMethod method = HTTP_GET;
+  HTTPMethod method = HTTPMethod::HTTP_GET;
   if (methodStr == "POST") {
-    method = HTTP_POST;
+    method = HTTPMethod::HTTP_POST;
   } else if (methodStr == "DELETE") {
-    method = HTTP_DELETE;
+    method = HTTPMethod::HTTP_DELETE;
   } else if (methodStr == "OPTIONS") {
-    method = HTTP_OPTIONS;
+    method = HTTPMethod::HTTP_OPTIONS;
   } else if (methodStr == "PUT") {
-    method = HTTP_PUT;
+    method = HTTPMethod::HTTP_PUT;
   } else if (methodStr == "PATCH") {
-    method = HTTP_PATCH;
+    method = HTTPMethod::HTTP_PATCH;
   }
   _currentMethod = method;
 
@@ -130,7 +130,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
 
   String formData;
   // below is needed only when POST type request
-  if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_DELETE){
+  if (method == HTTPMethod::HTTP_POST || method == HTTPMethod::HTTP_PUT || method == HTTPMethod::HTTP_PATCH || method == HTTPMethod::HTTP_DELETE){
     String boundaryStr;
     String headerName;
     String headerValue;
@@ -452,7 +452,7 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
               break;
             }
           } else {
-            _currentUpload.status = UPLOAD_FILE_START;
+            _currentUpload.status = HTTPUploadStatus::UPLOAD_FILE_START;
             _currentUpload.name = argName;
             _currentUpload.filename = argFilename;
             _currentUpload.type = argType;
@@ -466,7 +466,7 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
 #endif
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, _currentUpload);
-            _currentUpload.status = UPLOAD_FILE_WRITE;
+            _currentUpload.status = HTTPUploadStatus::UPLOAD_FILE_WRITE;
             uint8_t argByte = _uploadReadByte(client);
 readfile:
             while(argByte != 0x0D){
@@ -504,7 +504,7 @@ readfile:
                 if(_currentHandler && _currentHandler->canUpload(_currentUri))
                   _currentHandler->upload(*this, _currentUri, _currentUpload);
                 _currentUpload.totalSize += _currentUpload.currentSize;
-                _currentUpload.status = UPLOAD_FILE_END;
+                _currentUpload.status = HTTPUploadStatus::UPLOAD_FILE_END;
                 if(_currentHandler && _currentHandler->canUpload(_currentUri))
                   _currentHandler->upload(*this, _currentUri, _currentUpload);
 #ifdef DEBUG_ESP_HTTP_SERVER
@@ -603,7 +603,7 @@ String WebServer::urlDecode(const String& text)
 }
 
 bool WebServer::_parseFormUploadAborted(){
-  _currentUpload.status = UPLOAD_FILE_ABORTED;
+  _currentUpload.status = HTTPUploadStatus::UPLOAD_FILE_ABORTED;
   if(_currentHandler && _currentHandler->canUpload(_currentUri))
     _currentHandler->upload(*this, _currentUri, _currentUpload);
   return false;

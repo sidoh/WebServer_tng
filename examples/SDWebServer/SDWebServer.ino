@@ -102,14 +102,14 @@ bool loadFromSdCard(String path){
 void handleFileUpload(){
   if(server.uri() != "/edit") return;
   HTTPUpload& upload = server.upload();
-  if(upload.status == UPLOAD_FILE_START){
+  if(upload.status == HTTPUploadStatus::UPLOAD_FILE_START){
     if(SD.exists((char *)upload.filename.c_str())) SD.remove((char *)upload.filename.c_str());
     uploadFile = SD.open(upload.filename.c_str(), FILE_WRITE);
     DBG_OUTPUT_PORT.print("Upload: START, filename: "); DBG_OUTPUT_PORT.println(upload.filename);
-  } else if(upload.status == UPLOAD_FILE_WRITE){
+  } else if(upload.status == HTTPUploadStatus::UPLOAD_FILE_WRITE){
     if(uploadFile) uploadFile.write(upload.buf, upload.currentSize);
     DBG_OUTPUT_PORT.print("Upload: WRITE, Bytes: "); DBG_OUTPUT_PORT.println(upload.currentSize);
-  } else if(upload.status == UPLOAD_FILE_END){
+  } else if(upload.status == HTTPUploadStatus::UPLOAD_FILE_END){
     if(uploadFile) uploadFile.close();
     DBG_OUTPUT_PORT.print("Upload: END, Size: "); DBG_OUTPUT_PORT.println(upload.totalSize);
   }
@@ -229,7 +229,7 @@ void handleNotFound(){
   message += "URI: ";
   message += server.uri();
   message += "\nMethod: ";
-  message += (server.method() == HTTP_GET)?"GET":"POST";
+  message += (server.method() == HTTPMethod::HTTP_GET)?"GET":"POST";
   message += "\nArguments: ";
   message += server.args();
   message += "\n";
@@ -270,10 +270,10 @@ void setup(void){
   }
 
 
-  server.on("/list", HTTP_GET, printDirectory);
-  server.on("/edit", HTTP_DELETE, handleDelete);
-  server.on("/edit", HTTP_PUT, handleCreate);
-  server.on("/edit", HTTP_POST, [](){ returnOK(); }, handleFileUpload);
+  server.on("/list", HTTPMethod::HTTP_GET, printDirectory);
+  server.on("/edit", HTTPMethod::HTTP_DELETE, handleDelete);
+  server.on("/edit", HTTPMethod::HTTP_PUT, handleCreate);
+  server.on("/edit", HTTPMethod::HTTP_POST, [](){ returnOK(); }, handleFileUpload);
   server.onNotFound(handleNotFound);
 
   server.begin();

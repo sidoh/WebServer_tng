@@ -87,7 +87,7 @@ void handleNotFound() {
 	message += "URI: ";
 	message += server.uri();
 	message += "\nMethod: ";
-	message += ( server.method() == HTTP_GET ) ? "GET" : "POST";
+	message += ( server.method() == HTTPMethod::HTTP_GET ) ? "GET" : "POST";
 	message += "\nArguments: ";
 	message += server.args();
 	message += "\n";
